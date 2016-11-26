@@ -17,6 +17,30 @@ import classification as cl
 from gc import collect as gc_collect
 import re
 
+def obtain_error(classifier, test_set_x_org, test_set_y_org, batch_size=200, name="test"):
+    test_set_y_pred,test_set_y_pred_prob,test_time=deep_feat_select_DBN.test_model(classifier, test_set_x_org, batch_size)
+
+    print name + "_set_y_pred"
+    print test_set_y_pred
+    print "label"
+    print test_set_y_org
+
+    # calculating test error
+    err = 0
+    #for (test, lab) in (test_set_y_pred, test_set_y_org):
+    #    summ += test != lab
+    for (i, test) in enumerate(test_set_y_pred):
+        err += test_set_y_org[i] != test
+    print name + " error:"
+    print err * 100.0 / len(test_set_y_org)
+
+    #print "test_set_y_pred_prob[0:20]"
+    #print test_set_y_pred_prob
+
+    print name + "_time"
+    print test_time
+    return test_set_y_pred
+
 numpy.warnings.filterwarnings('ignore') # Theano causes some warnings  
 
 # taking the input parameters
@@ -254,29 +278,12 @@ for cell in cells:
             print param0
             weights.append(param0)
 
-            # test
-            test_set_y_pred,test_set_y_pred_prob,test_time=deep_feat_select_DBN.test_model(classifier, test_set_x_org, batch_size=200)
+            # test error
+            test_set_y_pred = obtain_error(classifier, test_set_x_org, test_set_y_org,name="test")
 
-            print "test_set_y_pred[0:20]"
-            #"print test_set_y_pred[0:20]"
-            print test_set_y_pred
-            print "label"
-            print test_set_y_org
+            # train error
+            obtain_error(classifier, train_set_x_org, train_set_y_org, name="train")
 
-            # calculating test error
-            err = 0
-            #for (test, lab) in (test_set_y_pred, test_set_y_org):
-            #    summ += test != lab
-            for (i, test) in enumerate(test_set_y_pred):
-                err += test_set_y_org[i] != test
-            print "test error:"
-            print err * 100.0 / len(test_set_y_org)
-
-            #print "test_set_y_pred_prob[0:20]"
-            #print test_set_y_pred_prob
-
-            print "test_time"
-            print test_time
             perf,conf_mat=cl.perform(test_set_y_org,test_set_y_pred,numpy.unique(train_set_y_org))
             perfs.append(perf)
             
